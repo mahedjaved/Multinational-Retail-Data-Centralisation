@@ -3,9 +3,9 @@
     [1] PyYAML : !pip install PyYAML
     [2] psycopg : !pip install psycopg2
 """
-from sqlalchemy import create_engine
-import psycopg2
+from sqlalchemy import create_engine, MetaData
 import yaml
+# import psycopg2
 
 class DatabaseConnector:
     """
@@ -39,4 +39,14 @@ class DatabaseConnector:
         return create_engine(f"{DATABASE_TYPE}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}")
     
     def list_db_tables(self):
-        sql_engine_data = super.init_db_engine()
+        # setup sql engine and connect
+        sql_engine = self.init_db_engine()
+        sql_engine.connect()
+
+        # metadata, holds collection of table info, their data types, names 
+        metadata = MetaData()
+        metadata.reflect(sql_engine)
+        table_names = metadata.tables.keys()
+
+        # return the table names in a list format
+        return list(table_names)
