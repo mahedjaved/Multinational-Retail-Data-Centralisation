@@ -11,6 +11,10 @@ class DatabaseConnector:
     """
     @desc : use to connect with and upload data to the database.
     """
+    def __init__(self):
+        pass
+
+    
     def read_db_creds(self):
         """
         @desc: reqs-> install PyYAML: pip install PyYAML
@@ -33,3 +37,6 @@ class DatabaseConnector:
         DATABASE = yaml_data['RDS_DATABASE']
 
         return create_engine(f"{DATABASE_TYPE}://{USER}:{PASSWORD}@{ENDPOINT}:{PORT}/{DATABASE}")
+    
+    def list_db_tables(self):
+        sql_engine_data = super.init_db_engine()
