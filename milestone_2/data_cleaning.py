@@ -58,6 +58,8 @@ class DataCleaning:
         #   -5) convert all 'GGB' country code to 'GB'
         users_df_processed['country_code'] = users_df_processed['country_code'].str.replace('GGB', 'GB', regex=False)
 
+        return users_df_processed
+
 
 
     
