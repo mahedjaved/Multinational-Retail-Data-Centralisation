@@ -87,6 +87,15 @@ class DataCleaning:
     # ================================================================== #
     #                   PRIMARY FUNCTIONS
     # ================================================================== #
+    def clean_orders_data(self, orders_df : pd.DataFrame):
+        """
+        @desc: pre-process the orders table
+        """
+        order_processed_df = orders_df.copy().drop_duplicates()
+        order_processed_df = order_processed_df.drop(columns={'first_name', 'last_name', '1'})
+        
+        return order_processed_df
+
     def clean_user_data(self, users_df : pd.DataFrame, table_name : str = 'legacy_users'):
         """
         @desc: pre-process the legacy users table
