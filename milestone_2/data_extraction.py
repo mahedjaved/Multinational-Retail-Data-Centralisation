@@ -3,6 +3,7 @@ from database_utils import DatabaseConnector
 import pandas as pd
 import requests
 import tabula
+import boto3
 import yaml
 
 class DataExtractor(DatabaseConnector):
@@ -84,3 +85,12 @@ class DataExtractor(DatabaseConnector):
                 print(f"Response Text: {response.text}")
         assert len(store_detail) == 450
         return pd.DataFrame(store_detail)
+    
+
+    def extract_from_s3(self):
+        """
+        @desc: retrives the products.csv table from the S3 bucket at s3://data-handling-public/products.csv
+        """
+        s3 = boto3.client('s3')
+        s3.download_file('data-handling-public', 'products.csv', '../products_data.csv')
+        return pd.read_csv('../products_data.csv')
