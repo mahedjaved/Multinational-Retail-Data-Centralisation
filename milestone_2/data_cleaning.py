@@ -51,6 +51,7 @@ class DataCleaning:
             raise f"The database : {table_name}, has total {users_df.isnull().sum().sum()} NULL values and {users_df.isna().sum().sum()} NaN values"
         else:
             print(f"[usrmsg] No NULLs or NaNs found in {table_name}")
+        users_df_processed = users_df.copy()
         users_df_processed = users_df[~users_df.apply(lambda row: row.astype(str).str.contains('NULL').any(), axis=1)]
         # check for data types 
         #   -1) always begin with dropping duplicates and storing as a seperate file
@@ -73,7 +74,7 @@ class DataCleaning:
         @desc: pre-process the card table
         """
         #   -1) drop columns that are filled with missing and/or incorrect information
-        card_processed_df = card_df.drop(columns=['Unnamed: 0'])
+        card_processed_df = card_df.copy().drop(columns=['Unnamed: 0'])
         #  -2) always begin with dropping duplicates 
         card_processed_df = card_processed_df.drop_duplicates()
         #   -3) remove columns with "NULL"
@@ -98,22 +99,28 @@ class DataCleaning:
 
         return card_processed_df
     
-    def called_clean_store_data(self, store_detail_processed_df : pd.DataFrame):
-        #   -1) remove purely nan or none columns (e.g. lat)
+    def called_clean_store_data(self, store_detail_df : pd.DataFrame):
+        """
+        @desc: pre-process the store table
+        """
+        store_detail_processed_df = store_detail_df.copy()
+        #   -1) always begin with removing duplicates
+        store_detail_processed_df = store_detail_processed_df.drop_duplicates()
+        #   -2) remove purely nan or none columns (e.g. lat)
         store_detail_processed_df = store_detail_processed_df.drop(columns="lat")
         store_detail_processed_df = store_detail_processed_df.drop(columns="address")
-        #   -2) remove all pure alphanmueric rows
+        #   -3) remove all pure alphanmueric rows
         store_detail_processed_df = store_detail_processed_df[~store_detail_processed_df['opening_date'].apply(is_alphanumeric)]
-        #   -3) account for missing addresses, longitude and latitude values
+        #   -4) account for missing addresses, longitude and latitude values
         # --> ANS) No need to change, it is a portal type store, and only one and unique in the table
-        #   -4) remove all alphabets in staff_numbers column
+        #   -5) remove all alphabets in staff_numbers column
         store_detail_processed_df["staff_numbers"] = store_detail_processed_df["staff_numbers"].str.replace(r'[a-zA-Z]', '', regex=True)
-        #   -5) fix format of opening_date
+        #   -6) fix format of opening_date
         store_detail_processed_df["opening_date"] = convert_date_to_yyyy_mm_dd(store_detail_processed_df["opening_date"])
-        #   -6) set eeEurope and eeAmerica to Europe and America in the continent column
+        #   -7) set eeEurope and eeAmerica to Europe and America in the continent column
         store_detail_processed_df["continent"] = store_detail_processed_df["continent"].str.replace('eeEurope', 'Europe')
         store_detail_processed_df["continent"] = store_detail_processed_df["continent"].str.replace('eeAmerica', 'America')
-        #   -7) convert all object to string appropriately and all numbers to int and float appropriately
+        #   -8) convert all object to string appropriately and all numbers to int and float appropriately
         store_detail_processed_df = store_detail_processed_df.astype({col: 'string' for col in store_detail_processed_df.columns if col not in ["index", "opening_date", "longitude", "staff_numbers", "latitude"]})
         # store_detail_processed_df = store_detail_processed_df.astype({col: 'float64' for col in store_detail_processed_df.columns if col in ["longitude", "latitude"]})
         store_detail_processed_df["longitude"] = pd.to_numeric(store_detail_processed_df["longitude"], errors='coerce')
@@ -121,3 +128,36 @@ class DataCleaning:
         store_detail_processed_df["staff_numbers"] = pd.to_numeric(store_detail_processed_df["staff_numbers"], errors='coerce')
 
         return store_detail_processed_df
+
+
+    def clean_products_data(self, products_df : pd.DataFrame):
+        """
+        @desc: pre-process the store table
+        """
+        products_processed_df = products_df.copy()
+        #   -1) always being by dropping duplicates
+        products_processed_df = products_processed_df.drop_duplicates()
+        #   -2) rename the Unamed column to index
+        products_processed_df.rename(columns={'Unnamed: 0': 'index'}, inplace=True)
+        #   -3) fill nans with empty strings to allow easier processing for the rest of the cleaning
+        products_processed_df = products_processed_df.fillna('')
+        #   -4) remove all the pure alphanumeric entries
+        products_processed_df = products_processed_df[~products_processed_df['date_added'].apply(is_alphanumeric)]
+        #   -5) for weights : a) compute all multiplication expressions and replace with resultant value
+        products_processed_df["weight"] = products_processed_df["weight"].apply(mullexp_to_netresult)
+        #   -6) for weights : b) standardise them to 'kg'
+        products_processed_df["weight"] = products_processed_df["weight"].apply(convert_weights)
+        #   -7) drop £ and kg to enable weight and product price columns to be numeric
+        products_processed_df["product_price"] = products_processed_df["product_price"].str.replace('£', '')
+        products_processed_df.rename(columns={'product_price': 'product_price (£)'}, inplace=True)
+        products_processed_df["weight"] = products_processed_df["weight"].str.replace('kg', '')
+        products_processed_df.rename(columns={'weight': 'weight (kg)'}, inplace=True)
+        #   -8) set product_price, weight, EAN to be numeric
+        products_processed_df["product_price (£)"] = pd.to_numeric(products_processed_df["product_price (£)"], errors='coerce')
+        products_processed_df["weight (kg)"] = pd.to_numeric(products_processed_df["weight (kg)"], errors='coerce')
+        products_processed_df["EAN"] = pd.to_numeric(products_processed_df["EAN"], errors='coerce')
+        #   -9) set product_name, cateogry, uuid, removed and product_code to string  AND  date_added to datetime
+        products_processed_df = products_processed_df.astype({"product_name" : "string", "category" : "string", "uuid" : "string", "removed" : "string", "product_code" : "string"})
+        products_processed_df['date_added'] = convert_date_to_yyyy_mm_dd(products_processed_df['date_added'])
+
+        return products_processed_df

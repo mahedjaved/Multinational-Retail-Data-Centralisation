@@ -93,4 +93,4 @@ class DataExtractor(DatabaseConnector):
         """
         s3 = boto3.client('s3')
         s3.download_file('data-handling-public', 'products.csv', '../products_data.csv')
-        return pd.read_csv('../products_data.csv')
+        return pd.read_csv('../products_data.csv') 
