@@ -10,6 +10,50 @@ class DataCleaning:
     #                   UTILITY FUNCTIONS
     # ================================================================== #
     @staticmethod
+    def convert_weights(weight):
+        """
+        @desc: check if the input matches the numeric and alphabet matching expression
+        """
+        match = re.match(r"([\d.]+)([a-zA-Z]+)", weight)
+        # if there is match then set the first output as value (numeric) and second as unit (g, kg, ml or l)
+        if match:
+            value, unit = match.groups()
+            # conver the numeric value to floating pt
+            value = float(value)
+            # check for the cases of 'g', 'ml' and 'l'
+            if unit == 'g':
+                value /= 1000
+                unit = 'kg'
+            elif unit == 'ml':
+                value /= 1000
+                unit = 'kg'
+            elif unit == 'l':
+                unit = 'kg'
+            elif unit == 'oz':
+                value *= 0.0283495
+                unit = 'kg'
+            # force the output to be 3 d.p
+            return f'{value:.3f}{unit}'
+        else:
+            return weight
+    
+    @staticmethod
+    def mullexp_to_netresult(in_exp):
+        if 'x' in in_exp:
+            match = re.match(r'(\d+)\s*x\s*(\d+)([a-zA-Z]+)', in_exp)
+            if match:
+                multiplier = int(match.group(1))
+                value = int(match.group(2))
+                unit = match.group(3)
+                # Perform the multiplication
+                result = multiplier * value
+                # Append the result with the unit
+                return str(result) + unit
+        else:
+            return in_exp
+        
+
+    @staticmethod
     def is_alpha(in_str):
         """
         @desc: function to check if the column has alphabets entries
@@ -135,7 +179,7 @@ class DataCleaning:
         @desc: pre-process the store table
         """
         products_processed_df = products_df.copy()
-        #   -1) always being by dropping duplicates
+        #   -1) always begin by dropping duplicates
         products_processed_df = products_processed_df.drop_duplicates()
         #   -2) rename the Unamed column to index
         products_processed_df.rename(columns={'Unnamed: 0': 'index'}, inplace=True)
