@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 from dateutil.parser import parse
 class DataCleaning:
     """
@@ -8,6 +9,13 @@ class DataCleaning:
     # ================================================================== #
     #                   UTILITY FUNCTIONS
     # ================================================================== #
+    @staticmethod
+    def is_alpha(in_str):
+        """
+        @desc: function to check if the column has alphabets entries
+        """
+        return any(c.isalpha() for c in in_str)
+    
     @staticmethod
     def is_alphanumeric(in_str):
         """
@@ -89,3 +97,27 @@ class DataCleaning:
         card_processed_df['expiry_date'] = pd.to_datetime(card_processed_df['expiry_date'], format='%m/%y') + pd.offsets.MonthEnd(0)
 
         return card_processed_df
+    
+    def called_clean_store_data(self, store_detail_processed_df : pd.DataFrame):
+        #   -1) remove purely nan or none columns (e.g. lat)
+        store_detail_processed_df = store_detail_processed_df.drop(columns="lat")
+        store_detail_processed_df = store_detail_processed_df.drop(columns="address")
+        #   -2) remove all pure alphanmueric rows
+        store_detail_processed_df = store_detail_processed_df[~store_detail_processed_df['opening_date'].apply(is_alphanumeric)]
+        #   -3) account for missing addresses, longitude and latitude values
+        # --> ANS) No need to change, it is a portal type store, and only one and unique in the table
+        #   -4) remove all alphabets in staff_numbers column
+        store_detail_processed_df["staff_numbers"] = store_detail_processed_df["staff_numbers"].str.replace(r'[a-zA-Z]', '', regex=True)
+        #   -5) fix format of opening_date
+        store_detail_processed_df["opening_date"] = convert_date_to_yyyy_mm_dd(store_detail_processed_df["opening_date"])
+        #   -6) set eeEurope and eeAmerica to Europe and America in the continent column
+        store_detail_processed_df["continent"] = store_detail_processed_df["continent"].str.replace('eeEurope', 'Europe')
+        store_detail_processed_df["continent"] = store_detail_processed_df["continent"].str.replace('eeAmerica', 'America')
+        #   -7) convert all object to string appropriately and all numbers to int and float appropriately
+        store_detail_processed_df = store_detail_processed_df.astype({col: 'string' for col in store_detail_processed_df.columns if col not in ["index", "opening_date", "longitude", "staff_numbers", "latitude"]})
+        # store_detail_processed_df = store_detail_processed_df.astype({col: 'float64' for col in store_detail_processed_df.columns if col in ["longitude", "latitude"]})
+        store_detail_processed_df["longitude"] = pd.to_numeric(store_detail_processed_df["longitude"], errors='coerce')
+        store_detail_processed_df["latitude"] = pd.to_numeric(store_detail_processed_df["latitude"], errors='coerce')
+        store_detail_processed_df["staff_numbers"] = pd.to_numeric(store_detail_processed_df["staff_numbers"], errors='coerce')
+
+        return store_detail_processed_df
