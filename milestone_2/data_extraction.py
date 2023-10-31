@@ -3,6 +3,7 @@ from database_utils import DatabaseConnector
 import pandas as pd
 import requests
 import tabula
+import yaml
 
 class DataExtractor(DatabaseConnector):
     """
@@ -51,3 +52,35 @@ class DataExtractor(DatabaseConnector):
         else:
             print(f"Request failed with status code: {response.status_code}")
             print(f"Response Text: {response.text}")
+
+
+    def retrieve_stores_data(self, retrieve_store_endpoint : str = "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/"):
+        """
+        @desc: given the retrieve a store endpoint, this function will return the data from all the stores as a pd.Dateframe
+        """
+        # the total stores information and a list to hold all of the responses
+        store_number = 450
+        store_detail = []
+        
+        # Read the YAML file and store its contents in a Python data structure (dictionary)
+        yaml_file_path = '../api_key.yaml'
+        with open(yaml_file_path, 'r') as file:
+            yaml_data = yaml.safe_load(file)
+        
+        # setup the API key header
+        headers = {
+            "X-API-KEY": yaml_data["API_KEY"]
+        }
+
+        # loop through the store numbers and store the detail of the individual stores
+        for i in range(store_number):
+            url = retrieve_store_endpoint + str(i)
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                store_detail.append(response.json())
+
+            else:
+                print(f"Request failed with status code: {response.status_code}")
+                print(f"Response Text: {response.text}")
+        assert len(store_detail) == 450
+        return pd.DataFrame(store_detail)
