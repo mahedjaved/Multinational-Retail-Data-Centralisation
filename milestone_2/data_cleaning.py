@@ -56,7 +56,7 @@ class DataCleaning:
     @staticmethod
     def is_alpha(in_str):
         """
-        @desc: function to check if the column has alphabets entries
+        @desc: function to check if the column has ONLY alphabets entries
         """
         return any(c.isalpha() for c in in_str)
     
@@ -214,3 +214,23 @@ class DataCleaning:
         products_processed_df['date_added'] = convert_date_to_yyyy_mm_dd(products_processed_df['date_added'])
 
         return products_processed_df
+    
+
+    def clean_event_date_data(self, events_df : pd.DataFrame):
+        """
+        @desc: pre-process the date details table
+        """
+        #   -1) drop duplicates and store a copy of the original
+        events_df_processed = events_df.copy().drop_duplicates()
+        #   -2) remove all entries that are purely alphanumeric in nature
+        events_df_processed = events_df_processed[~events_df_processed["date_uuid"].apply(is_alphanumeric)]
+        #   -3) use info from year, month, day and timestamp to set a seperate datetime column
+        events_df_processed['datetime'] = pd.to_datetime(events_df_processed[['year', 'month', 'day', 'timestamp']].astype(str).agg(' '.join, axis=1), format='%Y %m %d %H:%M:%S')
+        #   -4) set timestamp, timeperiod and date_uuid as string
+        events_df_processed = events_df_processed.astype({"timestamp" : "string", "time_period" : "string", "date_uuid" : "string"})
+        #   -5) set month, year and day as int32
+        events_df_processed["month"] = pd.to_numeric(events_df_processed["month"], errors='coerce')
+        events_df_processed["year"] = pd.to_numeric(events_df_processed["year"], errors='coerce')
+        events_df_processed["day"] = pd.to_numeric(events_df_processed["day"], errors='coerce')
+
+        return events_df_processed

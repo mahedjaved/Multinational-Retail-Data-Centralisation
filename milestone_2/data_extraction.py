@@ -94,3 +94,27 @@ class DataExtractor(DatabaseConnector):
         s3 = boto3.client('s3')
         s3.download_file('data-handling-public', 'products.csv', '../products_data.csv')
         return pd.read_csv('../products_data.csv') 
+    
+
+    def extract_eventstable_from_s3(self):
+        """
+        @desc: retrives the date_details.json table from the S3 bucket at https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json
+        """
+        s3 = boto3.client('s3')
+        s3.download_file('data-handling-public', 'date_details.json', '../date_details.json')
+        events_df = pd.read_json('../date_details.json')
+
+        #   -1) drop duplicates and store a copy of the original
+        events_df_processed = events_df.copy().drop_duplicates()
+        #   -2) remove all entries that are purely alphanumeric in nature
+        events_df_processed = events_df_processed[~events_df_processed["date_uuid"].apply(is_alphanumeric)]
+        #   -3) use info from year, month, day and timestamp to set a seperate datetime column
+        events_df_processed['datetime'] = pd.to_datetime(events_df_processed[['year', 'month', 'day', 'timestamp']].astype(str).agg(' '.join, axis=1), format='%Y %m %d %H:%M:%S')
+        #   -4) set timestamp, timeperiod and date_uuid as string
+        events_df_processed = events_df_processed.astype({"timestamp" : "string", "time_period" : "string", "date_uuid" : "string"})
+        #   -5) set month, year and day as int64
+        events_df_processed["month"] = pd.to_numeric(events_df_processed["month"], errors='coerce')
+        events_df_processed["year"] = pd.to_numeric(events_df_processed["year"], errors='coerce')
+        events_df_processed["day"] = pd.to_numeric(events_df_processed["day"], errors='coerce')
+
+        return events_df_processed
