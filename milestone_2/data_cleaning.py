@@ -59,7 +59,33 @@ class DataCleaning:
         users_df_processed['country_code'] = users_df_processed['country_code'].str.replace('GGB', 'GB', regex=False)
 
         return users_df_processed
-
-
-
     
+    def clean_card_data(self, card_df : pd.DataFrame):
+        """
+        @desc: pre-process the card table
+        """
+        #   -1) drop columns that are filled with missing and/or incorrect information
+        card_processed_df = card_df.drop(columns=['Unnamed: 0'])
+        #  -2) always begin with dropping duplicates 
+        card_processed_df = card_processed_df.drop_duplicates()
+        #   -3) remove columns with "NULL"
+        card_processed_df = card_processed_df[~card_processed_df.apply(lambda row: row.astype(str).str.contains('NULL').any(), axis=1)]
+        #   -4) remove all entries that are pure alphanumeric
+        card_processed_df = card_processed_df[~card_processed_df['card_provider'].apply(is_alphanumeric)]
+        #   -5) those rows that have NaN in card_number expiry_date, fill those appropriately
+        nan_card_num_expiry_date_df = card_processed_df[card_processed_df['card_number expiry_date'].isna()]
+        nan_card_num_expiry_date_df['card_number expiry_date'] = nan_card_num_expiry_date_df['card_number'].astype(str) + ' ' + nan_card_num_expiry_date_df['expiry_date'].astype(str)
+        #   -6) those rows that DONT have NaN in card_number expiry_date column, strip those isolated and replace their equivalent NaN values in the card_number and the expiry_date columns appropriately
+        not_nan_card_num_expiry_date_df = card_processed_df[~card_processed_df['card_number expiry_date'].isna()]
+        splitted_cardnumexpdate_df = not_nan_card_num_expiry_date_df['card_number expiry_date'].str.split(n=1, expand=True)
+        not_nan_card_num_expiry_date_df['card_number'], not_nan_card_num_expiry_date_df['expiry_date'] = splitted_cardnumexpdate_df[0], splitted_cardnumexpdate_df[1]
+        #   -7) combine the two to store the seperate data with no NaNs . . . (hopefully :P)
+        card_processed_df = pd.concat([nan_card_num_expiry_date_df, not_nan_card_num_expiry_date_df], ignore_index=True)
+        del nan_card_num_expiry_date_df, not_nan_card_num_expiry_date_df
+        #   -8) change all objects to string
+        card_processed_df = card_processed_df.astype('string')
+        #   -9) finally, change all date columns to datetimeformat
+        card_processed_df['date_payment_confirmed'] = convert_date_to_yyyy_mm_dd(card_processed_df['date_payment_confirmed'])
+        card_processed_df['expiry_date'] = pd.to_datetime(card_processed_df['expiry_date'], format='%m/%y') + pd.offsets.MonthEnd(0)
+
+        return card_processed_df

@@ -26,9 +26,8 @@ class DataExtractor(DatabaseConnector):
     
         return pd.DataFrame(sql_connection.execute(select(users_table)).fetchall())
     
-
     def retrieve_pdf_data(link2pdf : str):
         """
         @desc: given the link to the pdf document, this function will return the pd.Dataframe of that doc
         """
-        return tabula.read_pdf(link2pdf, stream=True)[0]
+        return pd.concat(tabula.read_pdf(link2pdf, stream=True, pages='all'), ignore_index=True)
