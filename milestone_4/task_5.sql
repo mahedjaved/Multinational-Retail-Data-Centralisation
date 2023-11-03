@@ -1,18 +1,28 @@
--- Finding which months in each year produce the highest cost of sales 
+-- Finding percentage of sales per store type
 SELECT  
-    ROUND(SUM(DP."product_price (£)" * OT.product_quantity)::numeric, 2)  AS total_sales
-    ,DDT.year
-    ,DDT.month
+    DSD.store_type
+    ,ROUND(SUM(DP."product_price (£)" * OT.product_quantity)::numeric, 2)  AS numbers_of_sales
+    ,ROUND((ROUND(SUM(DP."product_price (£)" * OT.product_quantity)::numeric, 2) / (
+        SELECT  
+            ROUND(SUM(DP."product_price (£)" * OT.product_quantity)::numeric, 2)  AS numbers_of_sales
+        FROM    
+            orders_table AS OT
+        INNER JOIN 
+            dim_products AS DP
+            ON OT.product_code = DP.product_code
+        INNER JOIN
+            dim_store_details AS DSD
+            ON DSD.store_code = OT.store_code
+        ) ) * 100::numeric, 2) AS "percentage_total (%)"
 FROM    
     orders_table AS OT
-LEFT JOIN dim_products AS DP
+INNER JOIN 
+    dim_products AS DP
     ON OT.product_code = DP.product_code
-LEFT JOIN dim_date_times AS DDT
-    ON OT.date_uuid = DDT.date_uuid
+INNER JOIN
+    dim_store_details AS DSD
+    ON DSD.store_code = OT.store_code
 GROUP BY    
-    DDT.month
-    ,DDT.year
+    DSD.store_type
 ORDER BY
-    ROUND(SUM(DP."product_price (£)" * OT.product_quantity)::numeric, 2)  DESC
-LIMIT   
-    (10)
+    SUM(DP."product_price (£)" * OT.product_quantity) DESC
