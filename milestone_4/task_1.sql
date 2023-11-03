@@ -1,3 +1,4 @@
+-- Fimding the amount of stores in each of the countries
 SELECT 
     country_code, COUNT(*) AS total_no_stores
 FROM 
