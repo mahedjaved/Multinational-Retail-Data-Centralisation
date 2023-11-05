@@ -21,6 +21,6 @@ SELECT
     ,CAST(product_code AS VARCHAR(12)) AS product_code
 FROM 
     dim_products
-DROP TABLE dim_products
+DROP TABLE dim_products;
 ALTER TABLE new_dim_products
     RENAME TO dim_products;

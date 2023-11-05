@@ -23,7 +23,7 @@ SELECT
     ,removed
     ,product_code
 FROM 
-    dim_products
+    dim_products;
 DROP TABLE
     dim_products;
 ALTER TABLE new_dim_products
