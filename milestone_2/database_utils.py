@@ -6,7 +6,6 @@
 from sqlalchemy import create_engine, MetaData
 import pandas as pd
 import yaml
-# import psycopg2
 
 class DatabaseConnector:
     """
@@ -53,7 +52,7 @@ class DatabaseConnector:
         return list(table_names)
     
 
-    def upload_to_db(self, in_df : pd.Dataframe, table_name : str):
+    def upload_to_db(self, in_df : pd.DataFrame, table_name : str):
         # Read the YAML file and store its contents in a Python data structure (dictionary)
         yaml_file_path = '../local_db_creds.yaml'
         with open(yaml_file_path, 'r') as file:

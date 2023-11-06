@@ -1,0 +1,5 @@
+LOCAL_PASSWORD: mahedjaved
+LOCAL_USER: postgres
+LOCAL_PORT: 5432
+LOCAL_HOST: localhost
+LOCAL_DATABASE: sales_data
