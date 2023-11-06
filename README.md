@@ -95,10 +95,10 @@ GNU General Public License
 - Boto3 : !pip install boto3
 
 # Usage instructions
-
+```
 - The individual databases can be obtained and cleaned by instantating the DataCleaning class as shown
 
-```from data_cleaning import DataCleaning
+from data_cleaning import DataCleaning
 datacleaner = DataCleaning()
 
 users_df = datacleaner.clean_user_data()
@@ -112,11 +112,11 @@ events_df = datacleaner.clean_event_date_data
 
 from database_utils import DatabaseConnector
 connector = DatabaseConnector()
-connector.upload_to_db(<table_name>)```
+connector.upload_to_db(<table_name>)
 
 - Note you'd require your credentials for both an AWS account, a postgres local space and API key for some of the private and restricted databases
 
-
+```
 # Some keynotes learned from this project
 
 - When listing table names from SQL alchemy, it is more computationally to use the Inspector object as opposed to the MetaData class. The Metadata object holds collection of table info, their data types, schema names etc
