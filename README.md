@@ -107,16 +107,16 @@ cards_table = datacleaner.clean_card_data()
 stores_df = datacleaner.called_clean_store_data()
 products_df = datacleaner.clean_products_data()
 events_df = datacleaner.clean_event_date_data
-
+```
 - These can be uploaded unto your local Postgres space as follows
-
+```
 from database_utils import DatabaseConnector
 connector = DatabaseConnector()
 connector.upload_to_db(<table_name>)
-
+```
 - Note you'd require your credentials for both an AWS account, a postgres local space and API key for some of the private and restricted databases
 
-```
+
 # Some keynotes learned from this project
 
 - When listing table names from SQL alchemy, it is more computationally to use the Inspector object as opposed to the MetaData class. The Metadata object holds collection of table info, their data types, schema names etc
