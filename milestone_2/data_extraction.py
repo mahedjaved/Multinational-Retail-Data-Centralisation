@@ -14,7 +14,7 @@ class DataExtractor(DatabaseConnector):
     """
     def __init__(self):
         # instantiate the Parent class DatabaseConnector
-        super.__init__(self)
+        super().__init__()
     
     def read_rds_table(super, table_name='legacy_users'):
         """
@@ -24,10 +24,11 @@ class DataExtractor(DatabaseConnector):
         """
         sql_engine = super.init_db_engine()
         sql_connection = sql_engine.connect()
-        metadata = MetaData().reflect(sql_engine)
-        users_table = Table(table_name, metadata, autoload=True, autoload_with=sql_engine)
+        metadata = MetaData()
+        metadata.reflect(sql_engine)
+        table = Table(table_name, metadata, autoload=True, autoload_with=sql_engine)
     
-        return pd.DataFrame(sql_connection.execute(select(users_table)).fetchall())
+        return pd.DataFrame(sql_connection.execute(select(table)).fetchall())
     
     def retrieve_pdf_data(self, link2pdf : str):
         """
@@ -102,19 +103,4 @@ class DataExtractor(DatabaseConnector):
         """
         s3 = boto3.client('s3')
         s3.download_file('data-handling-public', 'date_details.json', '../date_details.json')
-        events_df = pd.read_json('../date_details.json')
-
-        #   -1) drop duplicates and store a copy of the original
-        events_df_processed = events_df.copy().drop_duplicates()
-        #   -2) remove all entries that are purely alphanumeric in nature
-        events_df_processed = events_df_processed[~events_df_processed["date_uuid"].apply(is_alphanumeric)]
-        #   -3) use info from year, month, day and timestamp to set a seperate datetime column
-        events_df_processed['datetime'] = pd.to_datetime(events_df_processed[['year', 'month', 'day', 'timestamp']].astype(str).agg(' '.join, axis=1), format='%Y %m %d %H:%M:%S')
-        #   -4) set timestamp, timeperiod and date_uuid as string
-        events_df_processed = events_df_processed.astype({"timestamp" : "string", "time_period" : "string", "date_uuid" : "string"})
-        #   -5) set month, year and day as int64
-        events_df_processed["month"] = pd.to_numeric(events_df_processed["month"], errors='coerce')
-        events_df_processed["year"] = pd.to_numeric(events_df_processed["year"], errors='coerce')
-        events_df_processed["day"] = pd.to_numeric(events_df_processed["day"], errors='coerce')
-
-        return events_df_processed
+        return pd.read_json('../date_details.json')
