@@ -106,11 +106,11 @@ orders_df = datacleaner.clean_orders_data()
 cards_table = datacleaner.clean_card_data()
 stores_df = datacleaner.called_clean_store_data()
 products_df = datacleaner.clean_products_data()
-events_df = datacleaner.clean_event_date_data()```
+events_df = datacleaner.clean_event_date_data
 
 - These can be uploaded unto your local Postgres space as follows
 
-```from database_utils import DatabaseConnector
+from database_utils import DatabaseConnector
 connector = DatabaseConnector()
 connector.upload_to_db(<table_name>)```
 
