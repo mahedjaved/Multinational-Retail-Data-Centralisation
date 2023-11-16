@@ -143,6 +143,7 @@ connector.upload_to_db(<table_name>)
 
 - Re-run task 3 miletone 2 with Inspector object, use %%time magic func. to compare performance with MetaData object in SQLAlchemy
 - Change the ERD to show relationships
+- Remove the credential instantiations within the API setup in dataextractor.py, this should be naturally be passed as an argument for both code reproducibility and security.
 
 # Resources
 
