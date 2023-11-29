@@ -41,6 +41,9 @@ class DataCleaning(DataExtractor):
     
     @staticmethod
     def mullexp_to_netresult(in_exp):
+        """
+        @desc: checks if 'x' exists in the table, if then performs the calculation to get net weight
+        """
         if 'x' in in_exp:
             match = re.match(r'(\d+)\s*x\s*(\d+)([a-zA-Z]+)', in_exp)
             if match:
