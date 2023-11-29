@@ -1,3 +1,6 @@
 .db_creds.yaml
 .local_db_creds.yaml
 .api_key.yaml
+.card_details.pdf
+.date_details.json
+.products_data.csv
